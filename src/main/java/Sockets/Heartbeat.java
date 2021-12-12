@@ -80,12 +80,14 @@ public class Heartbeat extends Thread {
                         } catch (IOException e) {
                             c+=1;
                             boolean flag=true;
+                            System.out.println(clientIpAddress + " Did not respond to heart beat.");
                             if(c>2){
 
                                 System.out.print("[Server] Connection Closed\n");
                                 try {
                                     _socket.close();
                                     _input.close();
+                                    _timer.cancel();
                                 } catch (IOException ex) {
                                     ex.printStackTrace();
                                 }
