@@ -4,8 +4,10 @@ import java.io.BufferedInputStream;
 import java.io.DataInputStream;
 import java.io.DataOutputStream;
 import java.io.IOException;
+import java.net.InetSocketAddress;
 import java.net.ServerSocket;
 import java.net.Socket;
+import java.util.ArrayList;
 import java.util.Timer;
 
 
@@ -17,6 +19,7 @@ public class Server {
     private DataInputStream _input;
     private DataOutputStream _output;
     private Timer _timer;
+    public static ArrayList<String> BrokerIps= new ArrayList();
 
     boolean SendHeartbeat()
     {
@@ -25,6 +28,8 @@ public class Server {
 
     void ReceiveData() throws IOException {
         String in = "";
+        InetSocketAddress socketAddress = (InetSocketAddress) this._socket.getRemoteSocketAddress();
+        String clientIpAddress = socketAddress.getAddress().getHostAddress();
         while(!"end".equals(in))
         {
             in = this._input.readUTF();
@@ -38,16 +43,31 @@ public class Server {
 
 
     public Server(int port) throws IOException {
+//        BrokerIps.add("1.2.3.4");
+//        BrokerIps.add("5.6.3.4");
+        boolean flag=false;
         this._server = new ServerSocket(port);
         System.out.print("[Server] Waiting for client...\n");
         while(true) {
             this._socket = this._server.accept();
+            //Broker gets itself registered with the server
+            InetSocketAddress socketAddress = (InetSocketAddress) this._socket.getRemoteSocketAddress();
+            String clientIpAddress = socketAddress.getAddress().getHostAddress();
+            BrokerIps.add(clientIpAddress);
+            System.out.println("----------------------");
+            System.out.println("New broker has registered itself : "+ BrokerIps);
+            System.out.println("----------------------");
+            if(flag==false){
+                LeaderInstance.setLeaderIp(clientIpAddress);
+                flag=true;
+            }
             new Thread(new Task(this._socket)).start();
 
         }
 
 
     }
+
 
     @Override
     public String toString() {
@@ -96,4 +116,5 @@ public class Server {
         }
 
     }
+
 }
